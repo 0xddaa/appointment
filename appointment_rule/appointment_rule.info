@@ -1,0 +1,6 @@
+name = Appointment Rule
+description = Show the rule of appointment system.
+package = Appointment
+core = 7.x
+files[] = appointment_rule.install
+files[] = appointment_rule.module

@@ -1,0 +1,5 @@
+name = Appointment Classroom 
+description = Manager Classroom List.
+core = 7.x
+package = Appointment
+files[] = appointment_classroom.module

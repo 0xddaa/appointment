@@ -1,0 +1,5 @@
+name = Appointment Form
+description = User fill the form for applying appointment.
+package = Appointment
+core = 7.x
+file[]=appointment_form.module

@@ -1,0 +1,5 @@
+name = Appointment Course 
+description = Manager Cource List.
+core = 7.x
+package = Appointment
+files[] = appointment_course.module

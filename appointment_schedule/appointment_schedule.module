@@ -1,0 +1,342 @@
+<?php
+require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
+
+function appointment_schedule_block_info(){
+	$blocks['classroom_list'] = array(
+		'info' => t('Classroom List'),
+		'status' => TRUE,
+		'region' => 'sidebar_first',
+		'weight' => 0,
+		'visibility' => 0,
+	);
+	return $blocks;
+}
+
+function appointment_schedule_block_view($delta=''){
+	switch($delta){
+		case 'classroom_list':
+			$block['subject'] = t('Classroom list');
+			$block['content'] = appointment_schedule_block_contents($delta);
+			return $block;
+			break;
+	}
+}
+
+function appointment_schedule_block_contents($delta){
+	switch($delta){
+		case 'classroom_list':
+			$result = db_select('classroom','c')
+				->fields('c')
+				->execute();
+			$items = array();
+			foreach($result as $row){
+				global $base_url;
+				$url = $base_url.'/appointment_schedule/'.$row->serial;
+				if($row->serial != $row->name)
+					$items[] = '<a href="'.$url.'">'.$row->serial.'-'.$row->name.'</a>';
+				else	
+					$items[] = '<a href="'.$url.'">'.$row->serial.'</a>';
+			}
+			return array('#markup' => theme('item_list',array('items' => $items)));
+	}
+}
+
+function appointment_schedule_menu(){
+	$items['appointment_schedule']=array(
+			'title' => 'Schedule',
+			'page callback' => 'appointment_schedule',
+			'access callback' => TRUE,
+			'type' => MENU_CALLBACK,
+	);
+	$items['appointment_schedule/list']=array(
+			'title' => 'Appointments List',
+			'page callback' => 'appointment_list',
+			'access callback' => TRUE,
+			'type' => MENU_CALLBACK,
+	);
+	$items['appointment_schedule/changeweek']=array(
+			'title' => 'Schedule',
+			'page callback' => 'changeweek',
+			'access callback' => TRUE,
+			'type' => MENU_CALLBACK,
+	);
+	$items['all_list']=array(
+			'title' => 'All Appointments',
+			'page callback' => 'all_appointment_list',
+			'access callback' => 'user_access',
+			'access arguments' => array('all appointments'),
+			'type' => MENU_NORMAL_ITEM,
+	);
+	$items['all_list/delete']=array(
+			'title' => 'Delete Appointments',
+			'page callback' => 'delete_appointment',
+			'access callback' => 'user_access',
+			'access arguments' => array('all appointments'),
+			'type' => MENU_CALLBACK,
+	);
+	$items['my_list']=array(
+			'title' => 'My Appointments',
+			'page callback' => 'my_appointment_list',
+			'access callback' => 'user_access',
+			'access arguments' => array('my appointments'),
+			'type' => MENU_CALLBACK,
+	);
+	$items['my_list/edit']=array(
+			'title' => 'Edit Appointments',
+			'page callback' => 'edit_appointment',
+			'access callback' => 'user_access',
+			'access arguments' => array('my appointments'),
+			'type' => MENU_CALLBACK,
+	);
+	$items['my_list/delete']=array(
+			'title' => 'Delete Appointments',
+			'page callback' => 'delete_my_appointment',
+			'access callback' => 'user_access',
+			'access arguments' => array('my appointments'),
+			'type' => MENU_CALLBACK,
+	);
+	return $items;
+}
+
+function appointment_schedule_permission(){
+	return array(
+		'all appointments'=>array(
+			'title' => 'All appointments',
+			'description' => 'View and manage all appointments.'	
+		),
+		'my appointments'=>array(
+			'title' => 'My appointments',
+			'description' => 'View and manage my appointments.'	
+		),
+	);
+}
+
+function appointment_schedule($serial,$thisweek=null){
+	//set title
+	$clsroom_info = get_classroom_info($serial);
+	if($clsroom_info->name != $clsroom_info->serial)
+		$title = $clsroom_info->serial."\t".$clsroom_info->name;
+	else
+		$title = $clsroom_info->name;
+	drupal_set_title($title);
+
+	//descript the mean of color
+	$sun_date = add_date('n/j',0-date('w'),$thisweek); 
+	$sat_date = add_date('n/j',0-date('w')+6,$thisweek); 
+	$hint = "<div id=\"date\">\n".
+		' <font color="red">RED</font><font size="-1">:has reserved,</font>'.
+		' <font color="purple">PURPLE</font><font size="-1">:has class,</font>'.
+		' <font color="green">GREEN</font><font size="-1">:csie office</font>'.
+		"\n</div>";
+	$output = $hint;
+	//change nextweek or last week
+	$lastweek = add_date('Y-m-d',-7,$thisweek);
+	$nextweek = add_date('Y-m-d',7,$thisweek);
+	$weekchanger = "<div id=\"change_week\">\n<center>\n".
+		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$lastweek.'">lastweek</a>'.	
+		'|<a href="'.$base_path.'/drupal/appointment_schedule/list/'.$serial.'">all appointments</a>'.
+		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$nextweek.'">nextweek</a>|'.
+		"\n</center>\n</div>";
+	$output .= $weekchanger;
+	//bulid header fields
+	$weekdays = get_weekday();
+	$header = array(
+		'',
+		$weekdays[0].'('.add_date('n/j',0-date('w'),$thisweek).')',
+		$weekdays[1].'('.add_date('n/j',0-date('w')+1,$thisweek).')',
+		$weekdays[2].'('.add_date('n/j',0-date('w')+2,$thisweek).')',
+		$weekdays[3].'('.add_date('n/j',0-date('w')+3,$thisweek).')',
+		$weekdays[4].'('.add_date('n/j',0-date('w')+4,$thisweek).')',
+		$weekdays[5].'('.add_date('n/j',0-date('w')+5,$thisweek).')',
+		$weekdays[6].'('.add_date('n/j',0-date('w')+6,$thisweek).')'
+	);
+	//build rows from database
+	$rows = array();
+	$period = get_period();
+	for($i=0;$i<14;$i++){
+		$date_condition = 'date>=\''.add_date('Y-m-d',-date(w),$thisweek).'\' AND date<=\''.add_date('Y-m-d',-date('w')+6,$thisweek).'\'';
+		$serial_condition = 'cid='.$clsroom_info->cid;
+		$period_condition = '(start_period<='.$i.' AND end_period>='.$i.')';
+		$appointment_sql = 'SELECT start_period,end_period,name,date,priority FROM `appointment` WHERE '.$date_condition.' AND '.$serial_condition.' AND '.$period_condition;
+		$course_sql = 'UNION ALL SELECT start_period,end_period,crid,weekday,priority FROM course_schedule WHERE '.$serial_condition.' AND '.$period_condition;
+		$sql = $appointment_sql.' '.$course_sql;
+		$result = db_query($sql);
+		//initialize 
+		$rows[$i] = array(8);
+		for($j=1;$j<8;$j++)
+			$rows[$i][$j]=array('width'=>'12%');
+		$rows[$i][0] = $period[$i];
+		foreach($result as $row){
+			switch($row->priority){
+				case '0':
+					$weekday = $row->date;
+					$tmp = db_query('SELECT name,teacher FROM course WHERE crid='.$row->name)->fetchObject();
+					$name = $tmp->name.'<br/>'.$tmp->teacher;
+					$rows[$i][$weekday+1]=array('data'=>$name,'width'=>'12%','style'=>'color:purple');
+					break;
+				case '1':
+					$weekday = date_to_weekday($row->date);
+					$rows[$i][$weekday+1]=array('data'=>$row->name,'width'=>'12%','style'=>'color:green');
+					break;
+				case 2:
+				case 3:
+					$weekday = date_to_weekday($row->date);
+					$rows[$i][$weekday+1]=array('data'=>$row->name,'width'=>'12%','style'=>'color:red');
+					break;
+			}
+		}
+	}
+	$output .= theme(
+		'table',
+		array(
+			'header' => $header,
+			'rows' => $rows
+		)
+	);
+	return $output;
+}
+
+function appointment_list($serial){
+	$period_joint = get_period_joint();
+	$period_time = get_period_time();
+	//set title
+	$clsroom_info = get_classroom_info($serial);
+	if($clsroom_info->name != $clsroom_info->serial)
+		$title = $clsroom_info->serial."\t".$clsroom_info->name;
+	else
+		$title = $clsroom_info->name;
+	drupal_set_title($title.' '.'Appointments List');
+	
+	$class_condition = 'cid='.$clsroom_info->cid;
+	$date_condition = 'date>=\''.date('Y-m-d').'\'';
+	$sql = 'SELECT * FROM appointment WHERE '.$class_condition.' AND '.$date_condition.' ORDER BY date ASC';
+	$result = db_query($sql);
+	$rows = array();
+	$i=1;
+	$header = array('No','Date','Time','Owner','Teacher');
+	foreach($result as $row){
+		$tmp = explode('-',$row->date);
+		$rows[] = array(
+			$i++,
+			$row->date."\t".date(l,mktime(0,0,0,$tmp[1],$tmp[2],$tmp[0])),
+			$period_joint[$row->start_period].'~'.$period_joint[$row->end_period],
+			$row->name,
+			$row->teacher,
+		);
+	}
+	$output .= theme('table',array('header'=>$header,'rows'=>$rows));
+	return $output;
+}
+
+function all_appointment_list(){
+	$period_joint = get_period_joint();
+	$period_time = get_period_time();
+	
+	$sql = 'SELECT * FROM appointment WHERE date>='.date('Y-m-d').' ORDER BY date ASC';
+	$result = db_query($sql);
+	$rows = array();
+	$i=1;
+	$header = array('No','Date','Classroom','Time','Owner','Teacher','Delete');
+	foreach($result as $row){
+		$period_joint=get_period_joint();
+		$tmp = explode('-',$row->date);
+		$classroom = get_classroom_info(null,$row->cid)->name;
+		$rows[] = array(
+			$i++,
+			$row->date."\t".date(l,mktime(0,0,0,$tmp[1],$tmp[2],$tmp[0])),
+			$classroom,
+			$period_joint[$row->start_period].'~'.$period_joint[$row->end_period],
+			$row->name,
+			$row->teacher,
+			'<a href="all_list/delete/'.$row->aid.'"><img src="sites/all/modules/appointment/images/b_drop.png"></a>'
+		);
+	}
+	$output .= theme('table',array('header'=>$header,'rows'=>$rows));
+	return $output;
+}
+
+function my_appointment_list(){
+	global $user;
+	$sql = 'SELECT * FROM appointment WHERE date>='.date('Y-m-d').' AND account=\''.$user->name.'\' ORDER BY date DESC';
+	$result = db_query($sql);
+	$rows = array();
+	$i=1;
+	$header = array('No','Date','Classroom','Time','Owner','Teacher','Edit','Delte');
+	foreach($result as $row){
+		$period_joint=get_period_joint();
+		$tmp = explode('-',$row->date);
+		$classroom = get_classroom_info(null,$row->cid)->name;
+		$rows[] = array(
+			$i++,
+			$row->date."\t".date(l,mktime(0,0,0,$tmp[1],$tmp[2],$tmp[0])),
+			$classroom,
+			$period_joint[$row->start_period].'~'.$period_joint[$row->end_period],
+			$row->name,
+			$row->teacher,
+			'<a href="my_list/edit/'.$row->aid.'"><img src="sites/all/modules/appointment/images/b_edit.png"></a>',
+			'<a href="my_list/delete/'.$row->aid.'"><img src="sites/all/modules/appointment/images/b_drop.png"></a>'
+		);
+	}
+	$output .= theme('table',array('header'=>$header,'rows'=>$rows));
+	return $output;
+}
+
+function changeweek($serial,$date){
+	$tmp = explode('-',$date);
+	$thisweek['year']=$tmp[0];
+	$thisweek['month']=$tmp[1];
+	$thisweek['day']=$tmp[2];
+	return appointment_schedule($serial,$thisweek);
+}
+
+function add_date($format,$offset,$date){
+	if($date==null){
+		$date['year']=date('Y');
+		$date['month']=date('m');
+		$date['day']=date('d');
+	}
+	return date($format,mktime(0,0,0,$date['month'],intval($date['day'])+$offset,$date['year']));
+}
+
+function date_to_weekday($date){
+	$tmp = explode('-',$date);
+	return date('w',mktime(0,0,0,$tmp[1],$tmp[2],$tmp[0]));
+}
+
+function delete_appointment($aid){
+	$success = db_delete('appointment')
+		->condition('aid',$aid)
+		->execute();
+	if($success!=null)
+		drupal_set_message('Delete Appointment Success');
+	else
+		drupal_set_message('Delete Appointment Failed','error');
+	drupal_goto('all_list');
+}
+
+function delete_my_appointment($aid){
+	global $user;
+	$appointment = db_query('SELECT account FROM appointment WHERE aid='.$aid)
+		->fetchObject();
+	//check owner
+	if($appointment->account == $user->name){
+		$success = db_delete('appointment')
+			->condition('aid',$aid)
+			->execute();
+		if($success!=null)
+			drupal_set_message('Delete Appointment Success');
+		else
+			drupal_set_message('Delete Appointment Failed','error');
+		drupal_goto('my_list');
+	}
+}
+
+function edit_appointment($aid){
+	global $user;
+	$appointment = db_query('SELECT account FROM appointment WHERE aid='.$aid)
+		->fetchObject();
+	//check owner
+	if($appointment->account == $user->name){
+		drupal_goto('appointment_form/'.$aid);
+	}
+}
