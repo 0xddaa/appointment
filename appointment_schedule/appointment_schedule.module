@@ -3,7 +3,7 @@ require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
 
 function appointment_schedule_block_info(){
 	$blocks['classroom_list'] = array(
-		'info' => t('Classroom List'),
+		'info' => t('教室列表'),
 		'status' => TRUE,
 		'region' => 'sidebar_first',
 		'weight' => 0,
@@ -15,7 +15,7 @@ function appointment_schedule_block_info(){
 function appointment_schedule_block_view($delta=''){
 	switch($delta){
 		case 'classroom_list':
-			$block['subject'] = t('Classroom list');
+			$block['subject'] = t('教室列表');
 			$block['content'] = appointment_schedule_block_contents($delta);
 			return $block;
 			break;
@@ -61,7 +61,7 @@ function appointment_schedule_menu(){
 			'type' => MENU_CALLBACK,
 	);
 	$items['all_list']=array(
-			'title' => 'All Appointments',
+			'title' => '所有預約',
 			'page callback' => 'all_appointment_list',
 			'access callback' => 'user_access',
 			'access arguments' => array('all appointments'),
@@ -75,7 +75,7 @@ function appointment_schedule_menu(){
 			'type' => MENU_CALLBACK,
 	);
 	$items['my_list']=array(
-			'title' => 'My Appointments',
+			'title' => '我的預約',
 			'page callback' => 'my_appointment_list',
 			'access callback' => 'user_access',
 			'access arguments' => array('my appointments'),
@@ -111,7 +111,7 @@ function appointment_schedule_permission(){
 	);
 }
 
-function appointment_schedule($serial,$thisweek=null){
+function appointment_schedule($serial='A203',$thisweek=null){
 	//set title
 	$clsroom_info = get_classroom_info($serial);
 	if($clsroom_info->name != $clsroom_info->serial)
@@ -124,18 +124,18 @@ function appointment_schedule($serial,$thisweek=null){
 	$sun_date = add_date('n/j',0-date('w'),$thisweek); 
 	$sat_date = add_date('n/j',0-date('w')+6,$thisweek); 
 	$hint = "<div id=\"date\">\n".
-		' <font color="red">RED</font><font size="-1">:has reserved,</font>'.
-		' <font color="purple">PURPLE</font><font size="-1">:has class,</font>'.
-		' <font color="green">GREEN</font><font size="-1">:csie office</font>'.
+		' <font color="red">紅色</font><font size="-1">:表示有其他人預約,</font>'.
+		' <font color="purple">PURPLE</font><font size="-1">:表示該堂有課,</font>'.
+		' <font color="green">GREEN</font><font size="-1">:表示系辦會議</font>'.
 		"\n</div>";
 	$output = $hint;
 	//change nextweek or last week
 	$lastweek = add_date('Y-m-d',-7,$thisweek);
 	$nextweek = add_date('Y-m-d',7,$thisweek);
 	$weekchanger = "<div id=\"change_week\">\n<center>\n".
-		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$lastweek.'">lastweek</a>'.	
-		'|<a href="'.$base_path.'/drupal/appointment_schedule/list/'.$serial.'">all appointments</a>'.
-		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$nextweek.'">nextweek</a>|'.
+		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$lastweek.'">上一週</a>'.	
+		'|<a href="'.$base_path.'/drupal/appointment_schedule/list/'.$serial.'">所有預約</a>'.
+		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$nextweek.'">下一週</a>|'.
 		"\n</center>\n</div>";
 	$output .= $weekchanger;
 	//bulid header fields
@@ -213,7 +213,7 @@ function appointment_list($serial){
 	$result = db_query($sql);
 	$rows = array();
 	$i=1;
-	$header = array('No','Date','Time','Owner','Teacher');
+	$header = array('編號','預約日期','預約時間','預約人','指導教授');
 	foreach($result as $row){
 		$tmp = explode('-',$row->date);
 		$rows[] = array(
@@ -236,7 +236,7 @@ function all_appointment_list(){
 	$result = db_query($sql);
 	$rows = array();
 	$i=1;
-	$header = array('No','Date','Classroom','Time','Owner','Teacher','Delete');
+	$header = array('編號','預約日期','預約教室','預約時間','預約人','指導教授','刪除');
 	foreach($result as $row){
 		$period_joint=get_period_joint();
 		$tmp = explode('-',$row->date);
@@ -261,7 +261,7 @@ function my_appointment_list(){
 	$result = db_query($sql);
 	$rows = array();
 	$i=1;
-	$header = array('No','Date','Classroom','Time','Owner','Teacher','Edit','Delte');
+	$header = array('編號','預約日期','預約教室','預約時段','預約人','指導教授','編輯','刪除');
 	foreach($result as $row){
 		$period_joint=get_period_joint();
 		$tmp = explode('-',$row->date);

@@ -1,6 +1,6 @@
 <?php
 function get_weekday(){
-	return array('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+	return array('Sun 日','Mon 一','Tue 二','Wed 三','Thu 四','Fri 五','Sat 六');
 }
 
 function get_period_joint(){

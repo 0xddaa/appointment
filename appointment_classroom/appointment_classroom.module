@@ -1,7 +1,7 @@
 <?php
 function appointment_classroom_menu(){
 	$items['appointment_classroom']=array(
-			'title' => 'Classroom Manager',
+			'title' => '教室列表',
 			'page callback' => 'appointment_classroom_page',
 			'access callback' => 'user_access',
 			'access arguments' => array('manage classroom'),	
@@ -38,9 +38,9 @@ function delete_classroom($serial){
 		->condition('serial',$serial)
 		->execute();
 	if($success!=null)
-		drupal_set_message('Delete Classroom '.$serial.' Success');
+		drupal_set_message('刪除教室 '.$serial.' 成功!');
 	else
-		drupal_set_message('Delete Classroom '.$serial.' Failed','error');	
+		drupal_set_message('刪除教室 '.$serial.' 失敗!','error');	
 	
 	drupal_goto('appointment_classroom');
 	return;
@@ -56,9 +56,9 @@ function edit_classroom($arg){
 			->condition('cid',$_POST['cid'],'=')
 			->execute();
 			if($success != null)
-				drupal_set_message('Update Serial Success');
+				drupal_set_message('更改教室編號成功!');
 			else
-				drupal_set_message('Update Serial Failed','error');
+				drupal_set_message('更改教室編號失敗!','error');
 			drupal_goto('appointment_classroom');
 			break;
 		case 'name':
@@ -69,9 +69,9 @@ function edit_classroom($arg){
 			->condition('cid',$_POST['cid'],'=')
 			->execute();
 			if($success != null)
-				drupal_set_message('Update Name Success');
+				drupal_set_message('更改教室名稱成功!');
 			else
-				drupal_set_message('Update Name Failed','error');
+				drupal_set_message('更改教室名稱失敗!','error');
 			drupal_goto('appointment_classroom');
 			break;
 
@@ -87,16 +87,16 @@ function appointment_classroom_page(){
 		$rename = '
 			<center>
 				<form name="edit_serial" action="appointment_classroom/edit/serial" method="post">
-					New serial:
+					更改編號為:
       		<input name="new_serial" type="text" />
         	<input name="cid" type="hidden" value="'.$row->cid.'" />
-        	<input type="submit" value="submit" />
+        	<input type="submit" value="更改" />
 				</form>
 				<form name="edit_name" action="appointment_classroom/edit/name" method="post">
-					New name:
+					更改名稱為:
       		<input name="new_name" type="text" />
         	<input name="cid" type="hidden" value="'.$row->cid.'" />
-        	<input type="submit" value="submit" />
+        	<input type="submit" value="更改" />
 				</form>
 			</center>';
 		$delete = 
@@ -104,21 +104,21 @@ function appointment_classroom_page(){
 		$rows[] = array($row->serial, $row->name,$rename,$delete);
 	}
 	$headers = array(
-		'Serial',
-		'Name',
-		'Rename',
-		'Delete'
+		'教室編號',
+		'教室名稱',
+		'',
+		'刪除'
 	);
 	
-	$output = theme(
+	$output = '<h1>新增教室</h1>'; 
+	$output .= drupal_render(drupal_get_form('appointment_classroom_form'));
+	$output .= theme(
 		'table',
 		array(
 			'header' => $headers,
 			'rows' => $rows
 		)
 	);
-	$output .= '<h1>add classroom</h1>'; 
-	$output .= drupal_render(drupal_get_form('appointment_classroom_form'));
 	return $output;
 }
 
@@ -126,13 +126,13 @@ function appointment_classroom_form($form, &$form_state){
 	$form = array();
  	$form['serial'] = array(
      '#type'=>'textfield',
-     '#title'=>t('Serial'),
+     '#title'=>t('教室編號'),
   );
   $form['name'] = array(
     '#type'=>'textfield',
-  	'#title'=>t('Name'),
+  	'#title'=>t('教室名稱'),
   );
-  $form['submit'] = array('#type'=>'submit', '#value'=>'Submit');
+  $form['submit'] = array('#type'=>'submit', '#value'=>'新增');
 	return $form;
 }
 

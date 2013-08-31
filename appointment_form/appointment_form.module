@@ -3,7 +3,7 @@ require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
 
 function appointment_form_menu(){
 	$items['appointment_form'] = array(
-		'title' => 'Appointment Form',
+		'title' => '預約教室',
 		'page callback' => 'appointment_form_page',
 		'access callback' => 'user_access',
 		'access arguments' => array('reserve classroom'),
@@ -38,23 +38,23 @@ function appointment_form_form($form, &$form_state){
 	$form = array();
 	$form['user_info'] =array(
 		'#type' => 'fieldset',
-		'#title' => t('User Information'),
+		'#title' => t('預約人資訊'),
 	);
 	$form['user_info']['name'] = array(
 		'#type' =>'textfield',
-		'#title' =>t('Name'),
+		'#title' =>t('姓名'),
 		'#default_value'=>$appointment->name,
 		'#required'=>TRUE
 	);
 	$form['user_info']['phone'] = array(
 		'#type' =>'textfield',
-		'#title' =>t('Phone'),
+		'#title' =>t('電話'),
 		'#required'=>TRUE,
 		'#default_value'=>$appointment->phone
 	);
 	$form['user_info']['teacher'] = array(
 		'#type' =>'select',
-		'#title' =>t('Teacher'),
+		'#title' =>t('指導教授'),
 		'#options'=>get_teacher_list(),
 		'#default_value' => $appointment->teacher,
 	);
@@ -69,7 +69,7 @@ function appointment_form_form($form, &$form_state){
 	}
 	$form['classroom'] = array(
 		'#type' =>'select',
-		'#title' =>t('Appointment Classroom'),
+		'#title' =>t('預約教室'),
 		'#options'=> $classrooms,
 		'#default_value' => $appointment->cid,
 	);
@@ -80,29 +80,29 @@ function appointment_form_form($form, &$form_state){
 	$date = array('year'=>$tmp[0],'month'=>intval($tmp[1]),'day'=>intval($tmp[2]));
 	$form['date'] = array(
 		'#type' => 'date',
-		'#title' => t('Appointment Date'),
+		'#title' => t('預約日期'),
 		'#default_value' => $date
 	);
 	$form['start_period'] = array(
 		'#type' =>'select',
-		'#title' =>t('Start Period'),
+		'#title' =>t('開始時段'),
 		'#options'=>get_period(),
 		'#default_value'=>$appointment->start_period
 	);
 	$form['end_period'] = array(
 		'#type' =>'select',
-		'#title' =>t('End Period'),
+		'#title' =>t('結束時段'),
 		'#options'=>get_period(),
 		'#default_value'=>$appointment->end_period
 	);
 	$form['note'] = array(
 		'#type' =>'textfield',
-		'#title' =>t('Note'),
+		'#title' =>t('附註'),
 		'#default_value'=>$appointment->note
 	);
 	$form['submit'] = array(
 		'#type'=>'submit',
-		'#value'=>'Submit',
+		'#value'=>'確定預約',
 		'#submit'=>array('appointment_form_form_submit'),
 	);
 	return $form;

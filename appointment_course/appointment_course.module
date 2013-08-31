@@ -1,20 +1,23 @@
 <?php
 require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
+define('BLOCK_VISIBILITY_LISTED', 1);
 
 function appointment_course_block_info(){
 	$blocks['add_schedule'] = array(
-		'info' => t('Add Schedule'),
+		'info' => t('新增課表'),
     'status' => TRUE,
     'region' => 'sidebar_second',
     'weight' => 0,
-    'visibility' => 0,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'course_schedule/*'
   );
 	$blocks['delete_schedule'] = array(
-		'info' => t('Delete Schedule'),
+		'info' => t('刪除課表'),
     'status' => TRUE,
     'region' => 'sidebar_second',
     'weight' => 0,
-    'visibility' => 0,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'course_schedule/*'
   );
   return $blocks;
 }
@@ -22,11 +25,11 @@ function appointment_course_block_info(){
 function appointment_course_block_view($delta){
 	switch($delta){
 		case 'add_schedule':
-  		$block['subject'] = t('Add Schedule');
+  		$block['subject'] = t('新增課表');
   		$block['content'] = appointment_course_block_contents($delta);
 			break;
 		case 'delete_schedule':
-  		$block['subject'] = t('Delete Schedule');
+  		$block['subject'] = t('刪除課表');
   		$block['content'] = appointment_course_block_contents($delta);
 			break;
   }
@@ -48,7 +51,7 @@ function appointment_course_block_contents($delta){
 
 function appointment_course_menu(){
 	$items['appointment_course']=array(
-			'title' => 'Course Manager',
+			'title' => '課程列表',
 			'page callback' => 'appointment_course_page',
 			'access callback' => 'user_access',
 			'access arguments' => array('manage course'),	
@@ -69,7 +72,7 @@ function appointment_course_menu(){
 			'type' => MENU_CALLBACK,
 	);
 	$items['course_schedule']=array(
-			'title' => 'Edit Course Schedule',
+			'title' => '學期課表',
 			'page callback' => 'list_classroom',
 			'access callback' => 'user_access',
 			'access arguments' => array('manage course'),	
@@ -104,9 +107,9 @@ function delete_course($crid){
 		->condition('crid',$crid)
 		->execute();
 	if($success!=null)
-		drupal_set_message('Delete Course '.$crid.' Success');
+		drupal_set_message('刪除課程 '.$crid.' 成功!');
 	else
-		drupal_set_message('Delete Course '.$crid.' Failed','error');	
+		drupal_set_message('刪除課程 '.$crid.' 失敗!','error');	
 	
 	drupal_goto('appointment_course');
 	return;
@@ -122,9 +125,9 @@ function edit_course($arg){
 			->condition('crid',$_POST['crid'],'=')
 			->execute();
 			if($success != null)
-				drupal_set_message('Update Teacher Success');
+				drupal_set_message('更新授課老師成功!');
 			else
-				drupal_set_message('Update Teacher Failed','error');
+				drupal_set_message('更新授課老師失敗','error');
 			drupal_goto('appointment_course');
 			break;
 		case 'name':
@@ -135,9 +138,9 @@ function edit_course($arg){
 			->condition('crid',$_POST['crid'],'=')
 			->execute();
 			if($success != null)
-				drupal_set_message('Update Name Success');
+				drupal_set_message('更新課程名稱成功!');
 			else
-				drupal_set_message('Update Name Failed','error');
+				drupal_set_message('更新課程名稱失敗!','error');
 			drupal_goto('appointment_course');
 			break;
 
@@ -153,33 +156,33 @@ function appointment_course_page(){
 		$rename = '
 			<center>
 				<form name="edit_name" action="appointment_course/edit/name" method="post">
-					New name:
+					更改課程名稱為:
       		<input name="new_name" type="text" />
         	<input name="crid" type="hidden" value="'.$row->crid.'" />
-        	<input type="submit" value="submit" />
+        	<input type="submit" value="更改" />
 				</form>
 				<form name="edit_teacher" action="appointment_course/edit/teacher" method="post">
-					New teacher:
+					更改授課老師為:
       		<input name="new_teacher" type="text" />
         	<input name="crid" type="hidden" value="'.$row->crid.'" />
-        	<input type="submit" value="submit" />
+        	<input type="submit" value="更改" />
 				</form>
 			</center>';
 		$delete = 
 			'<a href="appointment_course/delete/'.$row->crid.'"><img src="sites/all/modules/appointment/images/b_drop.png" /></a>';
 		$rows[] = array($row->name, $row->teacher,$rename,$delete);
 	}
-	$headers = array('Name', 'Teacher','Rename','Delete');
+	$headers = array('課程名稱', '授課老師','','刪除');
 	
-	$output = theme(
+	$output = '<h1>新增課程</h1>'; 
+	$output .= drupal_render(drupal_get_form('appointment_course_form'));
+	$output .= theme(
 		'table',
 		array(
 			'header' => $headers,
 			'rows' => $rows
 		)
 	);
-	$output .= '<h1>add course</h1>'; 
-	$output .= drupal_render(drupal_get_form('appointment_course_form'));
 	return $output;
 }
 
@@ -239,13 +242,13 @@ function appointment_course_form($form, &$form_state){
 	$form = array();
  	$form['name'] = array(
      '#type'=>'textfield',
-     '#title'=>t('Name'),
+     '#title'=>t('課程名稱'),
   );
   $form['teacher'] = array(
     '#type'=>'textfield',
-  	'#title'=>t('Teacher'),
+  	'#title'=>t('授課老師'),
   );
-  $form['submit'] = array('#type'=>'submit', '#value'=>'Submit');
+  $form['submit'] = array('#type'=>'submit', '#value'=>'新增');
 	return $form;
 }
 
@@ -270,7 +273,7 @@ function add_schedule_form($form, &$form_state){
 		$courselist[$row->crid] = $row->name.' '.$row->teacher;
  	$form['name'] = array(
      	'#type'=>'select',
-     	'#title'=>t('Course'),
+     	'#title'=>t('課程名稱'),
 			'#options'=>$courselist
   );
 	$form['cid'] = array(
@@ -279,23 +282,23 @@ function add_schedule_form($form, &$form_state){
 	);
   $form['weekday'] = array(
     '#type'=>'select',
-  	'#title'=>t('Weekday'),
+  	'#title'=>t('星期'),
 		'#options'=>get_weekday(),
 		'#default_value' => 1 
   );
 	$form['start_period'] = array(
 		'#type'=>'select',
-		'#title'=>t('Start Period'),
+		'#title'=>t('從'),
 		'#options'=>get_period(),
 		'#default_value' => 0
 	);
 	$form['end_period'] = array(
 		'#type'=>'select',
-		'#title'=>t('End Period'),
+		'#title'=>t('到'),
 		'#options'=>get_period(),
 		'#default_value' => 0
 	);
-  $form['submit'] = array('#type'=>'submit', '#value'=>'Add');
+  $form['submit'] = array('#type'=>'submit', '#value'=>'新增');
 	return $form;
 }
 
@@ -312,7 +315,8 @@ function add_schedule_form_submit($form, &$form_state){
 }
 
 function delete_schedule_form($form, &$form_state){
-	$weekdays = get_weekday();
+/*
+  $weekdays = get_weekday();
 	$period_joint = get_period_joint();
 	$period_time = get_period_time();
 	$serial = substr($_SERVER['QUERY_STRING'],18,4);
@@ -331,11 +335,12 @@ function delete_schedule_form($form, &$form_state){
 	$form = array();
 	$form['course_schedule'] = array(
      	'#type'=>'select',
-     	'#title'=>t('Course'),
+     	'#title'=>t('課程名稱'),
 			'#options'=>$courselist
 	);
-  $form['submit'] = array('#type'=>'submit', '#value'=>'Delete');
+  $form['submit'] = array('#type'=>'submit', '#value'=>'刪除');
 	return $form;
+ */
 }
 
 function delete_schedule_form_submit($form, &$form_state){
