@@ -308,9 +308,9 @@ function delete_appointment($aid){
 		->condition('aid',$aid)
 		->execute();
 	if($success!=null)
-		drupal_set_message('Delete Appointment Success');
+		drupal_set_message('刪除預約時段成功!');
 	else
-		drupal_set_message('Delete Appointment Failed','error');
+		drupal_set_message('刪除預約時段失敗!','error');
 	drupal_goto('all_list');
 }
 
@@ -324,9 +324,9 @@ function delete_my_appointment($aid){
 			->condition('aid',$aid)
 			->execute();
 		if($success!=null)
-			drupal_set_message('Delete Appointment Success');
+			drupal_set_message('刪除預約時段成功!');
 		else
-			drupal_set_message('Delete Appointment Failed','error');
+			drupal_set_message('刪除預約時段失敗!','error');
 		drupal_goto('my_list');
 	}
 }

@@ -1,138 +1,108 @@
 <?php
-/**
- * Implements hook_node_info() to provide our appointment_rule type.
- */
-function appointment_rule_node_info() {
-  return array(
-    'appointment_rule' => array(
-      'name' => t('Appointment Rule'),
-      'base' => 'appointment_rule',
-      'description' => t('Use this content type to post rules of appointment system.'),
-			'has_title' => TRUE,
-			'title_label' => 'Title',
-      'help' => t('Enter the rules and the announce for users'),
-    ),
-  );
+require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
+
+function appointment_rule_menu(){
+  	$items['appointment_rule'] = array(
+		'title' => '教室預約系統使用說明',
+		'page callback' => 'appointment_rule_page',
+		'access callback' => TRUE,
+		'type' => MENU_NORMAL_ITEM
+	);
+
+	$items['appointment_rule/edit'] = array(
+		'title' => '教室預約系統規則',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('appointment_rule_form'),
+		'callback arguments' => array($form,&$form_state),
+		'access callback' => 'user_access',
+		'access arguments' => array('edit rule'),
+		'type' => MENU_CALLBACK
+	);
+	return $items;
 }
 
-/**
- * Implements hook_permission().
- */
-function appointment_rule_permission() {
-  return array(
-    'create appointment_rule' => array(
-      'title' => t('Create a rule post'),
-      'description' => t('Create a rule post'),
-    ),
-    'edit own rule post' => array(
-      'title' => t('Edit own rule post'),
-      'description' => t('Edit own rule post'),
-    ),
-    'edit any rule post' => array(
-      'title' => t('Edit any rule post'),
-      'description' => t('Edit any rule post'),
-    ),
-    'delete own rule post' => array(
-      'title' => t('Delete own rule post'),
-      'description' => t('Delete own rule post'),
-    ),
-    'delete any rule post' => array(
-      'title' => t('Delete any rule post'),
-      'description' => t('Delete any rule post'),
-    ),
-  );
-}
-
-/**
- * Implements hook_node_access().
- */
-
-function appointment_rule_node_access($op, $node, $account) {
-	if(isset($account))
-		$is_author = ($account->uid == $node->uid);
-  switch($op) {
-    case 'create':
-      // Allow if user's role has 'creat joke' permission.
-      if (user_access('create rule', $account)) {
-        return NODE_ACCESS_ALLOW;
-      }
-    case 'update':
-      // Allow if user's role has 'edit own joke' permission and user is
-      // the author; or if the user's role has 'edit any joke' permission.
-      if (user_access('edit own rule', $account) && $is_author || user_access('edit any rule', $account)) {
-        return NODE_ACCESS_ALLOW;
-      }
-    case 'delete':
-      // Allow if user's role has 'delete own joke' permission and user is
-      // the author; or if the user's role has 'delete any joke' permission.
-      if (user_access('delete own rule', $account) && $is_author || user_access('delete any rule', $account)) {
-        return NODE_ACCESS_ALLOW;
-      }
-  }
-}
-
-/**
-	* Implement hook_form() with the standard default form.
-*/
-function appointment_rule_form($node, $form_state) {
-	return node_content_form($node, $form_state);
-}
-
-/**
- * Implements hook_validate().
-*/
-function appointment_rule_validate($node) {
-}
-
-/**
-* Implements hook_load().
-*/
-function appointment_rule_load($nodes) {
-	// Add a new element to the node at load time for storing the
-	// job posting contact information
-	foreach ($nodes as $node) {
-		$node->contact = "contact infomation";
+function appointment_rule_page(){
+  	$sql = 'SELECT * FROM `as_rule`';
+	$result = db_query($sql)->fetchObject();
+  	//show annouce by javascirpt
+	if(strlen($result->announce)>0){
+		if(date('Y-m-d') <= $result->expiry_date){ //check if over expiry date
+        		$announce = "alert('".$result->announce."');";
+                	drupal_add_js($announce,'inline');
+		}
 	}
-	return $node;
+
+
+	//show rules and contact information
+  	$output = '';
+	$output .= $result->rule; 
+	$output .= "\n<hr>\n";
+	$output .= $result->contact;
+	return $output;
 }
 
-/**
-* Implement hook_view().
-*/
-function appointment_rule_view($node, $view_mode) {
-	// Add and theme the contact so it appears when the job post is displayed
-	if ($view_mode == 'full') {
-		//show annouce by javascirpt
-		$announce = 
-				"alert('".$node->announce['und'][0]['value']."');";
-		if(strlen($node->announce['und'][0]['value'])>0)
-			drupal_add_js($announce,'inline');
-
-		$node->content['contact'] = array(
-			'#markup' => theme(
-				'contact',
-				array(
-					'contact' => $node->contact,
-					'contact_id' => $node->nid
-				)
-			),
-			'#weight' => 100,
-		);
-	}
-	return $node;
-}
-
-/**
-* Implements hook_theme().
-*/
-function appointment_rule_theme() {
-	// define the variables and template associated with the contact field
-	// The contact will contain the name of the contact and the contact_id
-	// will be used to create a unique CSS ID
+function appointment_rule_permission(){
 	return array(
-		'contact' => array(
-			'variables' => array('contact' => NULL, 'contact_id' => NULL),
-			'template' => 'contact',
+		'edit rule' => array(
+			'title' => t('Edit Appointment Rule'),
+			'description' => 'Allow users edit the rule of appointment system.'
 		),
 	);
 }
+
+function appointment_rule_form($form, &$form_state){
+	$sql = 'SELECT * FROM `as_rule`';
+	$result = db_query($sql)->fetchObject();
+	$form = array();
+	$form['announce_set'] =array(
+		'#type' => 'fieldset',
+		'#title' => t('系辦公告'),
+	);
+	$form['announce_set']['announce'] = array(
+		'#type' =>'textfield',
+		'#default_value' => $result->announce,
+		'#title' =>t('公告內容'),
+	);
+	if($result->expiry_date != null)
+        	$tmp = explode('-',$result->expiry_date);
+	else
+		$tmp = explode('-',date('Y-m-d'));
+        $date = array('year'=>$tmp[0],'month'=>intval($tmp[1]),'day'=>intval($tmp[2]));
+	$form['announce_set']['expiry_date'] = array(
+		'#type' =>'date',
+		'#title' =>t('有效日期'),
+		'#default_value' => $date
+	);
+	$form['rule'] = array(
+		'#type' =>'textarea',
+		'#title' =>t('預約規則'),
+		'#default_value' => $result->rule
+	);
+	$form['contact'] = array(
+		'#type' =>'textfield',
+		'#default_value' => $result->contact,
+		'#size' => 150,
+		'#title' =>t('聯絡資訊'),
+	);
+	$form['submit'] = array(
+		'#type'=>'submit',
+		'#value'=>'確定',
+		'#submit'=>array('appointment_rule_form_submit'),
+	);
+	return $form;
+}
+
+function appointment_rule_form_submit($form_id, &$form_state){
+	$announce = $form_state['values']['announce'];
+	$rule = $form_state['values']['rule'];
+	$expiry_date =
+                $form_state['values']['expiry_date']['year'].'-'.
+                $form_state['values']['expiry_date']['month'].'-'.
+                $form_state['values']['expiry_date']['day'];
+
+	$sql = 'UPDATE `as_rule` SET `announce` = \''.$announce.'\', `expiry_date` = \''.$expiry_date.'\', `rule` = \''.$rule.'\'';
+	mysql_real_escape_string($sql);
+	db_query($sql);
+	drupal_goto('appointment_rule');
+}
+

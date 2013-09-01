@@ -1,113 +1,24 @@
 <?php
 /**
- * @file
- * Install file for Job Post module
- */
-
-/**
  * Implements hook_install().
- * - Add the body field
- * - Configure the body field
- * - create the company name field
  */
 function appointment_rule_install() {
-  node_types_rebuild();
-  $types = node_type_get_types();
-  // add the body field to the node type
-  node_add_body_field($types['appointment_rule']);
-  // load the instance definition for our content type's body
-  $body_instance = field_info_instance('node', 'body', 'appointment_rule');
-  // Configure the body field
-  $body_instance['type'] = 'text_summary_or_trimmed';
- 
-  // save our changes to the body field instance.
-  field_update_instance($body_instance);
+  $sql = 'CREATE TABLE `as_rule`(
+      	`announce` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci,
+	`expiry date` date,
+	`rule` text CHARACTER SET utf8 COLLATE utf8_general_ci
+  )';
+  db_query($sql);
 
-  // create all the fields we are adding to our content type.
-  foreach (_appointment_rule_installed_fields() as $field) {
-    field_create_field($field);
-  }
-
-  // Create all the instance for our fields.
-  foreach (_appointment_rule_installed_instances() as $instance) {
-    $instance['entity_type'] = 'node';
-    $instance['bundle'] = 'appointment_rule';
-    field_create_instance($instance);
-  }
-}
-
-/**
- * Return a structured array defining the fields create by content type.
- * For the job post module there is only one additional field - the company name
- * Other fields could be added by defining them in this function as additional elements
- * in the array below
- */
-function _appointment_rule_installed_fields() {
-  $t = get_t();
-  return array(
-    'announce' => array(
-      'field_name' => 'announce',
-      'label' => $t('Announce'),
-      'type' => 'text',
-    ),
-  );
-}
-
-/**
- * Return a structured array defining the field instances associated with this content type.
- */
-function _appointment_rule_installed_instances() {
-  $t = get_t();
-  return array(
-    'announce' => array(
-      'field_name' => 'announce',
-      'type' => 'text',
-      'label' => $t('Announce'),
-      'widget' => array(
-        'type' => 'text_textfield',
-      ),
-      'display' => array(
-        'default' => array(
-          'label' => 'hidden',
-          'type' => 'hidden',
-         ),
-      ),
-    ),
-  );
+  $sql = 'INSERT INTO `as_rule` (`announce`, `expiry date`, `rule`) VALUES (NULL, NULL, NULL)';
+  db_query($sql);
 }
 
 /**
  * Implements hook_uninstall()
  */
 function appointment_rule_uninstall() {
-  // Gather all the example content that might have created while this
-  // module was enabled.
-  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
-  $result = db_query($sql, array(':type' => 'appointment_rule'));
-  $nids = array();
-  foreach ($result as $row) {
-    $nids[] = $row->nid;
-  }
+  $sql = "DROP TABLE `as_rule`";
 
-  // Delete all the nodes at once
-  node_delete_multiple($nids);
-
-  // Loop over each of the fields defined by this module and delete
-  // all instance of the field, their data, and the field itself.
-  foreach (array_keys(_appointment_rule_installed_fields()) as $field) {
-    field_delete_field($field);
-  }
-
-  // Loop over any remaining field instance attached to the appointment_rule
-  // content type (such as the body field) and delete them individually.
-  $instances = field_info_instances('node', 'appointment_rule');
-  foreach ($instances as $instance_name => $instance) {
-    field_delete_instance($instance);
-  }
-
-  // Delete our content type
-  node_type_delete('appointment_rule');
-
-  // Purge all field infromation
-  field_purge_batch(1000);
+  db_query($sql);
 }
