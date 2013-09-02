@@ -309,7 +309,7 @@ function date_to_weekday($date){
 
 function delete_appointment($aid){
 	if(!is_numeric($aid)) exit(0);
-	$success = db_delete('appointment')
+	$success = db_delete('as_appointment')
 		->condition('aid',$aid)
 		->execute();
 	if($success!=null)
@@ -326,7 +326,7 @@ function delete_my_appointment($aid){
 		->fetchObject();
 	//check owner
 	if($appointment->account == $user->name){
-		$success = db_delete('appointment')
+		$success = db_delete('as_appointment')
 			->condition('aid',$aid)
 			->execute();
 		if($success!=null)

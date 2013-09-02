@@ -58,7 +58,7 @@ function appointment_form_form($form, &$form_state){
 		'#options'=>get_teacher_list(),
 		'#default_value' => $appointment->teacher,
 	);
-	$sql = 'SELECT * FROM classroom';
+	$sql = 'SELECT * FROM as_classroom';
 	$result = db_query($sql);
 	$classrooms = array();
 	foreach($result as $row){
@@ -128,7 +128,9 @@ function save_appointment($form_state,$aid=null){
 		$form_state['values']['date']['year'].'-'.
 		$form_state['values']['date']['month'].'-'.
 		$form_state['values']['date']['day'];
-
+	$teacher_info = get_teacher_info($form_state['values']['teacher']);
+	$title = get_professor_title();
+	$teacher = $teacher_info->name.' '.$title[$teacher_info->title];
 	$save = "INSERT INTO `as_appointment` SET ";
 	$edit = "UPDATE `as_appointment` SET ";
 	$fields = "
@@ -140,7 +142,7 @@ function save_appointment($form_state,$aid=null){
 		account ='".$user->name."',
 		name ='".$form_state['values']['name']."',
 		phone ='".$form_state['values']['phone']."',
-		teacher ='".$form_state['values']['teacher']."',
+		teacher ='".$teacher."',
 		note = '".$form_state['values'][note]."'";
 	global $user;
 	if($user->name =='csieoffice')
@@ -176,7 +178,7 @@ function check_data_conflict($form_state,$state){
 	$period_condition = '('.$period_condition.')';	
 
 	$appointment_sql = 'SELECT aid,priority FROM `as_appointment` WHERE '.$date_condition.' AND '.$serial_condition.' AND '.$period_condition;
-	$course_sql = 'UNION ALL SELECT id,priority FROM course_schedule WHERE '.$weekday_condition.' AND '.$serial_condition.' AND '.$period_condition;
+	$course_sql = 'UNION ALL SELECT id,priority FROM as_timetable WHERE '.$weekday_condition.' AND '.$serial_condition.' AND '.$period_condition;
 	$sql = $appointment_sql.' '.$course_sql;
 	mysql_real_escape_string($sql);
 	$result = db_query($sql)->fetchAssoc();

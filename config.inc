@@ -36,11 +36,15 @@ function get_teacher_list(){
   $sql = 'SELECT * FROM `as_teacher`';
   $result = db_query($sql);  
   foreach($result as $row){
-    $teachers[] = $row->name.' '.$title[$row->title];
+    $teachers[$row->tid]=$row->name.' '.$title[$row->title];
   }
-  $teachers[] = '其他';
+  $teachers[0]='其他';
   return $teachers;
-  //return $teacher_info;
+}
+
+function get_teacher_info($tid){
+  $sql = 'SELECT name,title FROM `as_teacher` WHERE tid='.$tid;
+  return db_query($sql)->fetchObject();
 }
 
 function check_classroom_valid($serial){
