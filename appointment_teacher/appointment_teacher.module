@@ -1,0 +1,123 @@
+<?php
+require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
+define('BLOCK_VISIBILITY_LISTED', 1);
+
+function appointment_teacher_block_info(){
+	$blocks['add_teacher'] = array(
+		'info' => t('新增教授資訊'),
+    'status' => TRUE,
+    'region' => 'sidebar_second',
+    'weight' => 0,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'appointment_teacher'
+  );
+  return $blocks;
+}
+
+function appointment_teacher_block_view($delta){
+	switch($delta){
+		case 'add_teacher':
+  		$block['subject'] = t('新增教授資訊');
+  		$block['content'] = appointment_teacher_block_contents($delta);
+			break;
+  }
+	return $block;
+}
+
+function appointment_teacher_block_contents($delta){
+	switch($delta){
+		case 'add_teacher':
+			$output = drupal_render(drupal_get_form('add_teacher_form'));
+			break;
+	}
+	return $output;
+}
+
+
+function appointment_teacher_menu(){
+	$items['appointment_teacher']=array(
+			'title' => '教授資訊列表',
+			'page callback' => 'appointment_teacher_page',
+			'access callback' => 'user_access',
+			'access arguments' => array('manage teacher'),	
+			'type' => MENU_NORMAL_ITEM,
+	);
+	$items['appointment_teacher/delete']=array(
+			'title' => 'Delete Teacher',
+			'page callback' => 'delete_teacher',
+			'access callback' => 'user_access',
+			'access arguments' => array('manage teacher'),	
+			'type' => MENU_CALLBACK,
+	);
+	return $items;
+}
+
+function appointment_teacher_permission(){
+	return array(
+		'manage teacher' => array(
+			'title' => t('Manager teacher'),
+			'description' => t('Allow users manager the list of teacher.'),
+		),
+	);
+}
+
+function delete_teacher($tid){
+	$success = db_delete('as_teacher')
+		->condition('tid',$tid)
+		->execute();
+	if($success!=null)
+		drupal_set_message('刪除教授資訊成功!');
+	else
+		drupal_set_message('刪除教授資訊失敗!','error');	
+	
+	drupal_goto('appointment_teacher');
+	return;
+}
+
+function appointment_teacher_page(){
+  $result = db_query('SELECT * FROM as_teacher');
+  $rows = array();
+  foreach($result as $row){
+    $delete = '<a href="appointment_teacher/delete/'.$row->tid.'"><img src="sites/all/modules/appointment/images/b_drop.png" /></a>';
+    $title = get_professor_title();
+    $rows[] = array($row->name, $title[$row->title], $delete);
+  }
+  $headers = array('姓名','職稱','刪除');
+  $output = theme(
+    'table',
+    array(
+      'header' => $headers,
+      'rows' => $rows
+    )
+  );
+  return $output;
+}
+
+function add_teacher_form($form, &$form_state){
+  $form['tid'] = array(
+    '#type'=>'hidden',
+    '#value'=>$tid,
+  );
+  $form['name'] = array(
+    '#type'=>'textfield',
+    '#title'=>t('姓名'),
+    '#size'=>15
+  );
+  $form['title'] = array(
+    '#type'=>'select',
+    '#title'=>t('職稱'),
+    '#options'=>get_professor_title(),
+    '#default_value' => 0
+  );
+  $form['submit'] = array('#type'=>'submit', '#value'=>'新增');
+	return $form;
+}
+
+function add_teacher_form_submit($form, &$form_state){
+  $teacher = array('name' => $form_state['values']['name'],
+  	'title' => $form_state['values']['title']);
+  db_insert('as_teacher')
+	->fields($teacher)
+	->execute();
+		
+}

@@ -32,7 +32,7 @@ function appointment_form_permission(){
 
 function appointment_form_form($form, &$form_state){
 	$aid = intval($form_state['build_info']['args'][0]);
-	$sql = 'SELECT * FROM appointment WHERE aid='.$aid;
+	$sql = 'SELECT * FROM as_appointment WHERE aid='.$aid;
 	mysql_real_escape_string($sql);
 	$appointment = db_query($sql)->fetchObject();
 	$form = array();
@@ -129,8 +129,8 @@ function save_appointment($form_state,$aid=null){
 		$form_state['values']['date']['month'].'-'.
 		$form_state['values']['date']['day'];
 
-	$save = "INSERT INTO `appointment` SET ";
-	$edit = "UPDATE `appointment` SET ";
+	$save = "INSERT INTO `as_appointment` SET ";
+	$edit = "UPDATE `as_appointment` SET ";
 	$fields = "
 		time = now(),
 		cid =".$form_state['values']['classroom'].",
@@ -175,7 +175,7 @@ function check_data_conflict($form_state,$state){
 	}
 	$period_condition = '('.$period_condition.')';	
 
-	$appointment_sql = 'SELECT aid,priority FROM `appointment` WHERE '.$date_condition.' AND '.$serial_condition.' AND '.$period_condition;
+	$appointment_sql = 'SELECT aid,priority FROM `as_appointment` WHERE '.$date_condition.' AND '.$serial_condition.' AND '.$period_condition;
 	$course_sql = 'UNION ALL SELECT id,priority FROM course_schedule WHERE '.$weekday_condition.' AND '.$serial_condition.' AND '.$period_condition;
 	$sql = $appointment_sql.' '.$course_sql;
 	mysql_real_escape_string($sql);
@@ -242,7 +242,7 @@ function check_data_logic($form_state){
 	}
 
 	//holiday
-	$sql = 'SELECT * FROM restriction WHERE type=\'holiday\'';
+	$sql = 'SELECT * FROM `as_restriction` WHERE type=\'holiday\'';
 	$result = db_query($sql);
 	foreach($result as $row){
 		if($date == $row->start_date){
@@ -252,7 +252,7 @@ function check_data_logic($form_state){
 	}
 
 	//special time
-	$sql = 'SELECT * FROM restriction WHERE type=\'special\'';
+	$sql = 'SELECT * FROM as_restriction WHERE type=\'special\'';
 	$result = db_query($sql);
 	foreach($result as $row){
 		if($date >= $row->start_date && $date <= $row->end_date){

@@ -9,7 +9,7 @@ function appointment_course_block_info(){
     'region' => 'sidebar_second',
     'weight' => 0,
     'visibility' => BLOCK_VISIBILITY_LISTED,
-    'pages' => 'course_schedule/*'
+    'pages' => 'timetable/*'
   );
 	$blocks['delete_schedule'] = array(
 		'info' => t('刪除課表'),
@@ -17,7 +17,7 @@ function appointment_course_block_info(){
     'region' => 'sidebar_second',
     'weight' => 0,
     'visibility' => BLOCK_VISIBILITY_LISTED,
-    'pages' => 'course_schedule/*'
+    'pages' => 'timetable/*'
   );
   return $blocks;
 }
@@ -71,19 +71,19 @@ function appointment_course_menu(){
 			'access arguments' => array('manage course'),	
 			'type' => MENU_CALLBACK,
 	);
-	$items['course_schedule']=array(
+	$items['timetable']=array(
 			'title' => '學期課表',
 			'page callback' => 'list_classroom',
 			'access callback' => 'user_access',
 			'access arguments' => array('manage course'),	
 			'type' => MENU_NORMAL_ITEM,
 	);
-	$sql = 'SELECT * FROM classroom';
+	$sql = 'SELECT * FROM as_classroom';
 	$result = db_query($sql);
 	foreach($result as $row){
-		$items['course_schedule/'.$row->serial]=array(
+		$items['timetable/'.$row->serial]=array(
 			'title' => $row->serial,
-			'page callback' => 'course_schedule',
+			'page callback' => 'timetable',
 			'page arguments' => array($row->cid),
 			'access callback' => 'user_access',
 			'access arguments' => array('manage course'),	
@@ -103,7 +103,7 @@ function appointment_course_permission(){
 }
 
 function delete_course($crid){
-	$success = db_delete('course')
+	$success = db_delete('as_course')
 		->condition('crid',$crid)
 		->execute();
 	if($success!=null)
@@ -118,7 +118,7 @@ function delete_course($crid){
 function edit_course($arg){
 	switch($arg){
 		case 'teacher':
-			$success = db_update('course')
+			$success = db_update('as_course')
 				->fields(array(
 					'teacher' => $_POST['new_teacher']
 			))
@@ -131,7 +131,7 @@ function edit_course($arg){
 			drupal_goto('appointment_course');
 			break;
 		case 'name':
-			$success = db_update('course')
+			$success = db_update('as_course')
 				->fields(array(
 					'name' => $_POST['new_name']
 			))
@@ -150,7 +150,7 @@ function edit_course($arg){
 }
 
 function appointment_course_page(){
-	$result = db_query('SELECT * FROM course ORDER BY name');
+	$result = db_query('SELECT * FROM as_course ORDER BY name');
 	$rows = array();
 	foreach($result as $row){
 		$rename = '
@@ -187,18 +187,18 @@ function appointment_course_page(){
 }
 
 function list_classroom(){
-	$sql = 'SELECT * FROM classroom';
+	$sql = 'SELECT * FROM as_classroom';
 	$result = db_query($sql);
 	$rows = array();
 	global $base_path;
 	foreach($result as $row){
-		$rows[] = '<a href="'.$base_path.'course_schedule/'.$row->serial.'">'.$row->serial.'</a>';
+		$rows[] = '<a href="'.$base_path.'timetable/'.$row->serial.'">'.$row->serial.'</a>';
 	}
 	
 	return theme('item_list',array('items'=>$rows));
 }
 
-function course_schedule($cid){
+function timetable($cid){
 	$weekdays = get_weekday();
 	$header = array(
 		'',
@@ -219,10 +219,10 @@ function course_schedule($cid){
 			$rows[$i][$j]=array('width'=>'12%');
 		$rows[$i][0]	= $period_joint[$i].' '.$period_time[$i];
 		$cid_condition = 'cid='.$cid;
-		$sql = 'SELECT * FROM course_schedule WHERE '.$cid_condition;
+		$sql = 'SELECT * FROM as_timetable WHERE '.$cid_condition;
 		$result = db_query($sql);
 		foreach($result as $row){
-			$sql = 'SELECT * FROM course WHERE crid='.$row->crid;
+			$sql = 'SELECT * FROM as_course WHERE crid='.$row->crid;
 			$course = db_query($sql)->fetchObject();
 			$coursename = $course->name.'<br />'.$course->teacher;
 			if($i>=$row->start_period && $i<=$row->end_period){
@@ -253,7 +253,7 @@ function appointment_course_form($form, &$form_state){
 }
 
 function appointment_course_form_submit($form, &$form_state) {
-	db_insert('course')
+	db_insert('as_course')
 		->fields(array(
 			'crid' => NULL,
 			'name' => $form_state['values']['name'],
@@ -263,10 +263,10 @@ function appointment_course_form_submit($form, &$form_state) {
 }
 
 function add_schedule_form($form, &$form_state){
-	$serial = substr($_SERVER['QUERY_STRING'],18,4);
+	$serial = substr($_SERVER['QUERY_STRING'],12,4);
 	$cid = get_classroom_info($serial)->cid;
 	$form = array();
-	$sql = 'SELECT * FROM course ORDER BY name';
+	$sql = 'SELECT * FROM as_course ORDER BY name';
 	$result = db_query($sql);
 	$courselist = array();
 	foreach($result as $row)
@@ -303,7 +303,7 @@ function add_schedule_form($form, &$form_state){
 }
 
 function add_schedule_form_submit($form, &$form_state){
-	db_insert('course_schedule')
+	db_insert('as_timetable')
 		->fields(array(
 			'cid' => $form_state['values']['cid'],
 			'crid' => $form_state['values']['name'],
@@ -315,17 +315,16 @@ function add_schedule_form_submit($form, &$form_state){
 }
 
 function delete_schedule_form($form, &$form_state){
-/*
   $weekdays = get_weekday();
 	$period_joint = get_period_joint();
 	$period_time = get_period_time();
-	$serial = substr($_SERVER['QUERY_STRING'],18,4);
+	$serial = substr($_SERVER['QUERY_STRING'],12,4);
 	$cid = get_classroom_info($serial)->cid;
-	$sql = 'SELECT * FROM course_schedule WHERE cid='.$cid.' ORDER BY weekday';	
+	$sql = 'SELECT * FROM as_timetable WHERE cid='.$cid.' ORDER BY weekday';	
 	$result = db_query($sql);
 	$courselist = array();
 	foreach($result as $row){
-		$sql = 'SELECT name,teacher FROM course WHERE crid='.$row->crid;
+		$sql = 'SELECT name,teacher FROM as_course WHERE crid='.$row->crid;
 		$course = db_query($sql)->fetchObject();
 		$courselist[$row->id] = 
 			$course->name.' '.$course->teacher.' '.
@@ -333,18 +332,17 @@ function delete_schedule_form($form, &$form_state){
 			$period_joint[$row->start_period].'~'.$period_joint[$row->end_period];
 	}
 	$form = array();
-	$form['course_schedule'] = array(
+	$form['timetable'] = array(
      	'#type'=>'select',
      	'#title'=>t('課程名稱'),
 			'#options'=>$courselist
 	);
   $form['submit'] = array('#type'=>'submit', '#value'=>'刪除');
 	return $form;
- */
 }
 
 function delete_schedule_form_submit($form, &$form_state){
-	db_delete('course_schedule')
-		->condition('id',$form_state['values']['course_schedule'])
+	db_delete('as_timetable')
+		->condition('id',$form_state['values']['timetable'])
 		->execute();
 }

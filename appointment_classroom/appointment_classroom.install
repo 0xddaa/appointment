@@ -1,0 +1,21 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function appointment_classroom_install() {
+  $sql = 'CREATE TABLE IF NOT EXISTS `as_classroom`(
+      	`cid` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      	`serial` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci,
+	`name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci
+  )';
+  db_query($sql);
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function appointment_classroom_uninstall() {
+  $sql = "DROP TABLE IF EXISTS `as_classroom`";
+
+  db_query($sql);
+}

@@ -1,0 +1,26 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function appointment_restrict_install() {
+  $sql = 'CREATE TABLE IF NOT EXISTS `as_restriction`(
+      	`rid` int(11) AUTO_INCREMENT PRIMARY KEY,
+      	`type` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT \'holiday\',
+      	`name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+	`start_date` date NOT NULL,
+	`end_date` date NOT NULL,
+	`start_period` int(11) NOT NULL,
+	`end_period` int(11) NOT NULL
+  )';
+  db_query($sql);
+
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function appointment_restrict_uninstall() {
+  $sql = "DROP TABLE IF EXISTS `as_restriction`";
+
+  db_query($sql);
+}

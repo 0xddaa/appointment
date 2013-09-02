@@ -1,0 +1,5 @@
+name = Appointment Teacher 
+description = Manage the list of teachers that teach on department.
+core = 7.x
+package = Appointment
+files[] = appointment_teacher.module

@@ -1,0 +1,29 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function appointment_form_install() {
+  $sql = 'CREATE TABLE  IF NOT EXISTS `as_appointment`(
+      	`aid` int(11) AUTO_INCREMENT PRIMARY KEY,
+      	`time` datetime NOT NULL,
+	`cid` int(11),
+	`date` date,
+	`start_period` tinyint(4) NOT NULL,
+	`end_period` tinyint(4) NOT NULL,
+      	`account` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+      	`name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+      	`phone` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+      	`teacher` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+      	`note` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+	`priority` tinyint(1) NOT NULL DEFAULT 2
+  )';
+  db_query($sql);
+
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function appointment_form_uninstall() {
+  drupal_set_message('as_appointment不會刪除，需手動刪除table');
+}

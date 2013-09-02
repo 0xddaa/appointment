@@ -14,19 +14,41 @@ function get_period_time(){
 function get_period(){
 	return array('1 08:00-08:50','2 09:00-09:50','3 10:00-10:50','4 11:00-11:50','Z 12:00-12:50','5 13:00-13:50','6 14:00-14:50','7 15:00-15:50','8 16:00-16:50','9 17:00-17:50','A 18:00-18:50','B 19:00-19:50','C 20:00-20:50','D 21:00-21:50');
 }
+function get_professor_title(){
+	return array('教授','副教授','助理教授','榮譽教授');
+}
 
 function get_classroom_info($serial,$cid=-1){
-	//get classroom info;
-  $sql = 'SELECT * FROM classroom WHERE serial=\''.$serial.'\' OR cid='.$cid;
+  if(check_classroom_valid($serial)==false && $cid==-1)
+    exit(0);
+
+  //get classroom info;
+  $sql = 'SELECT * FROM as_classroom WHERE serial=\''.$serial.'\' OR cid='.$cid;
+  mysql_real_escape_string($sql);
   $clsroom_info = db_query($sql)->fetchObject();  
-	return $clsroom_info;
+  return $clsroom_info;
 }	
 
 function get_teacher_list(){
-	return array(
-		'teacher1'=>'teacher1',
-		'teacher2'=>'teacher2',
-		'teacher3'=>'teacher3'
-	);
+  //get teacher list;
+  $teachers = array();
+  $title = get_professor_title();
+  $sql = 'SELECT * FROM `as_teacher`';
+  $result = db_query($sql);  
+  foreach($result as $row){
+    $teachers[] = $row->name.' '.$title[$row->title];
+  }
+  $teachers[] = '其他';
+  return $teachers;
+  //return $teacher_info;
+}
+
+function check_classroom_valid($serial){
+  $result = db_query('SELECT * FROM `as_classroom`');
+  foreach($result as $row){
+    if($serial == $row->serial)
+      return true;
+  }
+  return false;
 }
 ?>

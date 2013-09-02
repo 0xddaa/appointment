@@ -1,0 +1,22 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function appointment_teacher_install() {
+  $sql = 'CREATE TABLE `as_teacher`(
+      `tid` int(11) AUTO_INCREMENT PRIMARY KEY,
+      `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+      `title` ENUM(\'教授\',\'副教授\',\'助理教授\',\'榮譽教授\') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL
+      )';
+  db_query($sql);
+
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function appointment_teacher_uninstall() {
+  $sql = "DROP TABLE `as_teacher`";
+
+  db_query($sql);
+}

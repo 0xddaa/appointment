@@ -3,7 +3,7 @@
  * Implements hook_install().
  */
 function appointment_rule_install() {
-  $sql = 'CREATE TABLE `as_rule`(
+  $sql = 'CREATE TABLE IF NOT EXISTS `as_rule`(
       	`announce` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci,
 	`expiry date` date,
 	`rule` text CHARACTER SET utf8 COLLATE utf8_general_ci
@@ -18,7 +18,7 @@ function appointment_rule_install() {
  * Implements hook_uninstall()
  */
 function appointment_rule_uninstall() {
-  $sql = "DROP TABLE `as_rule`";
+  $sql = "DROP TABLE IF EXISTS `as_rule`";
 
   db_query($sql);
 }

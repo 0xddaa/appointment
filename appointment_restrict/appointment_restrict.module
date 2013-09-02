@@ -62,20 +62,20 @@ function appointment_restrict_permission(){
 }
 
 function delete_restriction($rid){
-	$success = db_delete('restriction')
+	$success = db_delete('as_restriction')
 		->condition('rid',$rid)
 		->execute();
 	if($success!=null)
-		drupal_set_message('刪除限制時段 '.$rid.' 成功!');
+		drupal_set_message('刪除限制時段成功!');
 	else
-		drupal_set_message('刪除限制時段 '.$rid.' 失敗!','error');	
+		drupal_set_message('刪除限制時段失敗!','error');	
 	
 	drupal_goto('appointment_restrict');
 	return;
 }
 
 function appointment_restrict_page(){
-	$result = db_query('SELECT * FROM restriction ORDER BY start_date');
+	$result = db_query('SELECT * FROM as_restriction ORDER BY start_date');
 	$period = get_period();
 	$rows = array();
 	foreach($result as $row){
@@ -144,11 +144,11 @@ function add_restriction_form_submit($form, &$form_state){
 	$end_period = $form_state['values']['end_period'];
 
 	if($start_date > $end_date){
-		form_set_error('start_date','restrict date error');
+		form_set_error('start_date','限制日期有誤!');
 		return;
 	}
 	else if($start_period > $end_period){
-		form_set_error('start_period','restrict period error');
+		form_set_error('start_period','限制時段有誤!');
 		return;
 	}
 
@@ -170,11 +170,11 @@ function add_restriction_form_submit($form, &$form_state){
 
 	if(($start_date == $end_date)
 		 && ($form_state['values']['start_period']==0 && $form_state['values']['end_period']==13))
-		db_insert('restriction')
+		db_insert('as_restriction')
 			->fields($holiday)
 			->execute();
 	else
-		db_insert('restriction')
+		db_insert('as_restriction')
 			->fields($special)
 			->execute();
 		

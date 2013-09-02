@@ -1,0 +1,32 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function appointment_course_install() {
+  $sql = 'CREATE TABLE IF NOT EXISTS `as_course`(
+      	`crid` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	`name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci,
+      	`teacher` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci
+  )';
+  db_query($sql);
+  $sql = 'CREATE TABLE IF NOT EXISTS `as_timetable`(
+      	`id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      	`cid` int(11) NOT NULL,
+      	`crid` int(11) NOT NULL,
+	`weekday` tinyint(4) NOT NULL,
+	`start_period` tinyint(4) NOT NULL,
+	`end_period` tinyint(4) NOT NULL,
+	`priority` tinyint(4) NOT NULL DEFAULT 0
+  )';
+  db_query($sql);
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function appointment_course_uninstall() {
+  $sql = "DROP TABLE IF EXISTS `as_course`";
+  db_query($sql);
+  $sql = "DROP TABLE IF EXISTS `as_timetable`";
+  db_query($sql);
+}
