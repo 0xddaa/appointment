@@ -1,6 +1,5 @@
 <?php
 require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
-define('BLOCK_VISIBILITY_LISTED', 1);
 
 function appointment_restrict_block_info(){
 	$blocks['add_restriction'] = array(

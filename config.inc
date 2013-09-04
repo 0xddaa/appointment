@@ -1,4 +1,8 @@
 <?php
+define('BLOCK_VISBILITY_LISTED',1);
+
+
+
 function get_weekday(){
 	return array('Sun 日','Mon 一','Tue 二','Wed 三','Thu 四','Fri 五','Sat 六');
 }
