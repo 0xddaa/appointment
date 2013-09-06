@@ -1,4 +1,35 @@
 <?php
+function appointment_classroom_block_info(){
+        $blocks['add_classroom'] = array(
+                'info' => t('新增教室'),
+    'status' => TRUE,
+    'region' => 'sidebar_second',
+    'weight' => 0,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'appointment_classroom'
+  );
+  return $blocks;
+}
+
+function appointment_classroom_block_view($delta){
+        switch($delta){
+                case 'add_classroom':
+                $block['subject'] = t('新增教室');
+                $block['content'] = appointment_classroom_block_contents($delta);
+                        break;
+  }
+        return $block;
+}
+
+function appointment_classroom_block_contents($delta){
+        switch($delta){
+                case 'add_classroom':
+                        $output = drupal_render(drupal_get_form('add_classroom_form'));
+                        break;
+        }
+        return $output;
+}
+
 function appointment_classroom_menu(){
 	$items['appointment_classroom']=array(
 			'title' => '教室列表',
@@ -81,7 +112,7 @@ function edit_classroom($arg){
 }
 
 function appointment_classroom_page(){
-	$result = db_query('select * from as_classroom');
+	$result = db_query('select * from `as_classroom` ORDER BY `cid` ASC');
 	$rows = array();
 	foreach($result as $row){
 		$rename = '
@@ -110,9 +141,7 @@ function appointment_classroom_page(){
 		'刪除'
 	);
 	
-	$output = '<h1>新增教室</h1>'; 
-	$output .= drupal_render(drupal_get_form('appointment_classroom_form'));
-	$output .= theme(
+	$output = theme(
 		'table',
 		array(
 			'header' => $headers,
@@ -122,21 +151,23 @@ function appointment_classroom_page(){
 	return $output;
 }
 
-function appointment_classroom_form($form, &$form_state){
-	$form = array();
- 	$form['serial'] = array(
-     '#type'=>'textfield',
-     '#title'=>t('教室編號'),
+function add_classroom_form($form, &$form_state){
+  $form = array();
+  $form['serial'] = array(
+    '#type'=>'textfield',
+    '#title'=>t('教室編號'),
+    '#size'=>20
   );
   $form['name'] = array(
     '#type'=>'textfield',
-  	'#title'=>t('教室名稱'),
+    '#title'=>t('教室名稱'),
+    '#size'=>20
   );
   $form['submit'] = array('#type'=>'submit', '#value'=>'新增');
-	return $form;
+  return $form;
 }
 
-function appointment_classroom_form_submit($form, &$form_state) {
+function add_classroom_form_submit($form, &$form_state) {
 	$nid = db_insert('as_classroom')
 		->fields(array(
 			'cid' => NULL,

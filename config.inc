@@ -42,7 +42,7 @@ function get_teacher_list(){
   foreach($result as $row){
     $teachers[$row->tid]=$row->name.' '.$title[$row->title];
   }
-  $teachers[0]='其他';
+  $teachers[0]='None';
   return $teachers;
 }
 

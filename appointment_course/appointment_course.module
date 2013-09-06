@@ -2,49 +2,64 @@
 require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
 
 function appointment_course_block_info(){
-	$blocks['add_schedule'] = array(
-		'info' => t('新增課表'),
+  $blocks['add_schedule'] = array(
+    'info' => t('新增課表'),
     'status' => TRUE,
     'region' => 'sidebar_second',
     'weight' => 0,
     'visibility' => BLOCK_VISIBILITY_LISTED,
     'pages' => 'timetable/*'
   );
-	$blocks['delete_schedule'] = array(
-		'info' => t('刪除課表'),
+  $blocks['delete_schedule'] = array(
+    'info' => t('刪除課表'),
     'status' => TRUE,
     'region' => 'sidebar_second',
     'weight' => 0,
     'visibility' => BLOCK_VISIBILITY_LISTED,
     'pages' => 'timetable/*'
+  );
+  $blocks['add_course'] = array(
+    'info' => t('新增課程'),
+    'status' => TRUE,
+    'region' => 'sidebar_second',
+    'weight' => 0,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'appointment_course'
   );
   return $blocks;
 }
 
 function appointment_course_block_view($delta){
-	switch($delta){
-		case 'add_schedule':
-  		$block['subject'] = t('新增課表');
-  		$block['content'] = appointment_course_block_contents($delta);
-			break;
-		case 'delete_schedule':
-  		$block['subject'] = t('刪除課表');
-  		$block['content'] = appointment_course_block_contents($delta);
-			break;
+  switch($delta){
+    case 'add_schedule':
+      $block['subject'] = t('新增課表');
+      $block['content'] = appointment_course_block_contents($delta);
+      break;
+    case 'delete_schedule':
+      $block['subject'] = t('刪除課表');
+      $block['content'] = appointment_course_block_contents($delta);
+      break;
+    case 'add_course':
+      $block['subject'] = t('新增課程');
+      $block['content'] = appointment_course_block_contents($delta);
+      break;
   }
-	return $block;
+  return $block;
 }
 
 function appointment_course_block_contents($delta){
-	switch($delta){
-		case 'add_schedule':
-			$output = drupal_render(drupal_get_form('add_schedule_form'));
-			break;
-		case 'delete_schedule':
-			$output = drupal_render(drupal_get_form('delete_schedule_form'));
-			break;
-	}
-	return $output;
+  switch($delta){
+    case 'add_schedule':
+      $output = drupal_render(drupal_get_form('add_schedule_form'));
+      break;
+    case 'delete_schedule':
+      $output = drupal_render(drupal_get_form('delete_schedule_form'));
+      break;
+    case 'add_course':
+      $output = drupal_render(drupal_get_form('add_course_form'));
+      break;
+  }
+  return $output;
 }
 
 
@@ -149,40 +164,38 @@ function edit_course($arg){
 }
 
 function appointment_course_page(){
-	$result = db_query('SELECT * FROM as_course ORDER BY name');
-	$rows = array();
-	foreach($result as $row){
-		$rename = '
-			<center>
-				<form name="edit_name" action="appointment_course/edit/name" method="post">
-					更改課程名稱為:
-      		<input name="new_name" type="text" />
-        	<input name="crid" type="hidden" value="'.$row->crid.'" />
-        	<input type="submit" value="更改" />
-				</form>
-				<form name="edit_teacher" action="appointment_course/edit/teacher" method="post">
-					更改授課老師為:
-      		<input name="new_teacher" type="text" />
-        	<input name="crid" type="hidden" value="'.$row->crid.'" />
-        	<input type="submit" value="更改" />
-				</form>
-			</center>';
-		$delete = 
-			'<a href="appointment_course/delete/'.$row->crid.'"><img src="sites/all/modules/appointment/images/b_drop.png" /></a>';
-		$rows[] = array($row->name, $row->teacher,$rename,$delete);
-	}
-	$headers = array('課程名稱', '授課老師','','刪除');
-	
-	$output = '<h1>新增課程</h1>'; 
-	$output .= drupal_render(drupal_get_form('appointment_course_form'));
-	$output .= theme(
-		'table',
-		array(
-			'header' => $headers,
-			'rows' => $rows
-		)
-	);
-	return $output;
+  $result = db_query('SELECT * FROM `as_course` ORDER BY `name`');
+  $rows = array();
+  foreach($result as $row){
+    $rename = '
+      <center>
+      <form name="edit_name" action="appointment_course/edit/name" method="post">
+      更改課程名稱為:
+      <input name="new_name" type="text" />
+      <input name="crid" type="hidden" value="'.$row->crid.'" />
+      <input type="submit" value="更改" />
+      </form>
+      <form name="edit_teacher" action="appointment_course/edit/teacher" method="post">
+      更改授課老師為:
+      <input name="new_teacher" type="text" />
+      <input name="crid" type="hidden" value="'.$row->crid.'" />
+      <input type="submit" value="更改" />
+      </form>
+      </center>';
+    $delete = 
+      '<a href="appointment_course/delete/'.$row->crid.'"><img src="sites/all/modules/appointment/images/b_drop.png" /></a>';
+    $rows[] = array($row->name, $row->teacher,$rename,$delete);
+  }
+  $headers = array('課程名稱', '授課老師','','刪除');
+
+  $output = theme(
+    'table',
+    array(
+      'header' => $headers,
+      'rows' => $rows
+    )
+  );
+  return $output;
 }
 
 function list_classroom(){
@@ -237,28 +250,30 @@ function timetable($cid){
 	return $output;
 }
 
-function appointment_course_form($form, &$form_state){
-	$form = array();
- 	$form['name'] = array(
-     '#type'=>'textfield',
-     '#title'=>t('課程名稱'),
+function add_course_form($form, &$form_state){
+  $form = array();
+  $form['name'] = array(
+    '#type'=>'textfield',
+    '#title'=>t('課程名稱'),
+    '#size'=>20,
   );
   $form['teacher'] = array(
     '#type'=>'textfield',
-  	'#title'=>t('授課老師'),
+    '#title'=>t('授課老師'),
+    '#size'=>20,
   );
   $form['submit'] = array('#type'=>'submit', '#value'=>'新增');
-	return $form;
+  return $form;
 }
 
-function appointment_course_form_submit($form, &$form_state) {
-	db_insert('as_course')
-		->fields(array(
-			'crid' => NULL,
-			'name' => $form_state['values']['name'],
-			'teacher' => $form_state['values']['teacher']
-		))
-		->execute();
+function add_course_form_submit($form, &$form_state) {
+  db_insert('as_course')
+    ->fields(array(
+      'crid' => NULL,
+      'name' => $form_state['values']['name'],
+      'teacher' => $form_state['values']['teacher']
+    ))
+    ->execute();
 }
 
 function add_schedule_form($form, &$form_state){

@@ -62,8 +62,8 @@ function appointment_form_form($form, &$form_state){
 	$result = db_query($sql);
 	$classrooms = array();
 	foreach($result as $row){
-		if($row->name != $row->serial)
-			$classrooms[$row->cid] = $row->serial.'('.$row->name.')';
+		if($row->name != '')
+			$classrooms[$row->cid] = $row->serial.'-'.$row->name;
 		else
 			$classrooms[$row->cid] = $row->serial;
 	}

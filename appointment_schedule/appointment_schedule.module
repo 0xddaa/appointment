@@ -25,9 +25,8 @@ function appointment_schedule_block_view($delta=''){
 function appointment_schedule_block_contents($delta){
   switch($delta){
     case 'classroom_list':
-      $result = db_select('as_classroom','c')
-	->fields('c')
-	->execute();
+      $sql='SELECT * FROM `as_classroom` ORDER BY `cid` ASC';
+      $result = db_query($sql);
       $items = array();
       foreach($result as $row){
 	global $base_url;
@@ -233,7 +232,7 @@ function all_appointment_list(){
 	$period_joint = get_period_joint();
 	$period_time = get_period_time();
 	
-	$sql = 'SELECT * FROM as_appointment WHERE date>='.date('Y-m-d').' ORDER BY date ASC';
+	$sql = 'SELECT * FROM as_appointment WHERE date>=\''.date('Y-m-d').'\' ORDER BY date ASC';
 	mysql_real_escape_string($sql);
 	$result = db_query($sql);
 	$rows = array();
@@ -242,7 +241,7 @@ function all_appointment_list(){
 	foreach($result as $row){
 		$period_joint=get_period_joint();
 		$tmp = explode('-',$row->date);
-		$classroom = get_classroom_info(null,$row->cid)->name;
+		$classroom = get_classroom_info(null,$row->cid)->serial;
 		$rows[] = array(
 			$i++,
 			$row->date."\t".date(l,mktime(0,0,0,$tmp[1],$tmp[2],$tmp[0])),
@@ -259,7 +258,7 @@ function all_appointment_list(){
 
 function my_appointment_list(){
 	global $user;
-	$sql = 'SELECT * FROM as_appointment WHERE date>='.date('Y-m-d').' AND account=\''.$user->name.'\' ORDER BY date DESC';
+	$sql = 'SELECT * FROM as_appointment WHERE date>=\''.date('Y-m-d').'\' AND account=\''.$user->name.'\' ORDER BY date DESC';
 	mysql_real_escape_string($sql);	
 	$result = db_query($sql);
 	$rows = array();
@@ -268,7 +267,7 @@ function my_appointment_list(){
 	foreach($result as $row){
 		$period_joint=get_period_joint();
 		$tmp = explode('-',$row->date);
-		$classroom = get_classroom_info(null,$row->cid)->name;
+		$classroom = get_classroom_info(null,$row->cid)->serial;
 		$rows[] = array(
 			$i++,
 			$row->date."\t".date(l,mktime(0,0,0,$tmp[1],$tmp[2],$tmp[0])),
