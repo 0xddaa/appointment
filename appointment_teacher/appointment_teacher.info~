@@ -1,5 +1,0 @@
-name = Appointment Restrict 
-description = Add some restriction about special date or time.
-core = 7.x
-package = Appointment
-files[] = appointment_restrict.module
