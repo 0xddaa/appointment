@@ -124,9 +124,9 @@ function delete_course($crid){
 		->condition('crid',$crid)
 		->execute();
 	if($success!=null)
-		drupal_set_message('刪除課程 '.$crid.' 成功!');
+		drupal_set_message('刪除課程成功!');
 	else
-		drupal_set_message('刪除課程 '.$crid.' 失敗!','error');	
+		drupal_set_message('刪除課程失敗!','error');	
 	
 	drupal_goto('appointment_course');
 	return;
