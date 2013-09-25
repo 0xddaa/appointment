@@ -26,7 +26,8 @@ function appointment_teacher_block_view($delta){
 function appointment_teacher_block_contents($delta){
 	switch($delta){
 		case 'add_teacher':
-			$output = drupal_render(drupal_get_form('add_teacher_form'));
+		  	$form = drupal_get_form('add_teacher_form');
+			$output = drupal_render($form);
 			break;
 	}
 	return $output;

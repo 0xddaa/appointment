@@ -1,5 +1,7 @@
 <?php
 require_once(DRUPAL_ROOT.'/sites/all/modules/appointment/config.inc');
+global $base_url;
+
 
 function appointment_schedule_block_info(){
 	$blocks['classroom_list'] = array(
@@ -29,7 +31,6 @@ function appointment_schedule_block_contents($delta){
       $result = db_query($sql);
       $items = array();
       foreach($result as $row){
-	global $base_url;
 	$url = $base_url.'/appointment_schedule/'.$row->serial;
 	if($row->name == '')
 	  $items[] = '<a href="'.$url.'">'.$row->serial.'</a>';
@@ -132,9 +133,9 @@ function appointment_schedule($serial='A203',$thisweek=null){
 	$lastweek = add_date('Y-m-d',-7,$thisweek);
 	$nextweek = add_date('Y-m-d',7,$thisweek);
 	$weekchanger = "<div id=\"change_week\">\n<center>\n".
-		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$lastweek.'">上一週</a>'.	
-		'|<a href="'.$base_path.'/drupal/appointment_schedule/list/'.$serial.'">所有預約</a>'.
-		'|<a href="'.$base_path.'/drupal/appointment_schedule/changeweek/'.$serial.'/'.$nextweek.'">下一週</a>|'.
+		'|<a href="'.$base_path.'/appointment_schedule/changeweek/'.$serial.'/'.$lastweek.'">上一週</a>'.	
+		'|<a href="'.$base_path.'/appointment_schedule/list/'.$serial.'">所有預約</a>'.
+		'|<a href="'.$base_path.'/appointment_schedule/changeweek/'.$serial.'/'.$nextweek.'">下一週</a>|'.
 		"\n</center>\n</div>";
 	$output .= $weekchanger;
 	//bulid header fields

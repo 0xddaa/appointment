@@ -24,7 +24,8 @@ function appointment_classroom_block_view($delta){
 function appointment_classroom_block_contents($delta){
         switch($delta){
                 case 'add_classroom':
-                        $output = drupal_render(drupal_get_form('add_classroom_form'));
+		  	$form = drupal_get_form('add_classroom_form');
+                        $output = drupal_render($form);
                         break;
         }
         return $output;

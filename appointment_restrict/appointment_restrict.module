@@ -26,7 +26,8 @@ function appointment_restrict_block_view($delta){
 function appointment_restrict_block_contents($delta){
 	switch($delta){
 		case 'add_restriction':
-			$output = drupal_render(drupal_get_form('add_restriction_form'));
+		  	$form = drupal_get_form('add_restriction_form');
+			$output = drupal_render($form);
 			break;
 	}
 	return $output;

@@ -50,13 +50,16 @@ function appointment_course_block_view($delta){
 function appointment_course_block_contents($delta){
   switch($delta){
     case 'add_schedule':
-      $output = drupal_render(drupal_get_form('add_schedule_form'));
+      $form = drupal_get_form('add_schedule_form');
+      $output = drupal_render($form);
       break;
     case 'delete_schedule':
-      $output = drupal_render(drupal_get_form('delete_schedule_form'));
+      $form = drupal_get_form('delete_schedule_form');
+      $output = drupal_render($form);
       break;
     case 'add_course':
-      $output = drupal_render(drupal_get_form('add_course_form'));
+      $form = drupal_get_form('add_course_form');
+      $output = drupal_render($form);
       break;
   }
   return $output;
@@ -95,14 +98,14 @@ function appointment_course_menu(){
 	$sql = 'SELECT * FROM as_classroom';
 	$result = db_query($sql);
 	foreach($result as $row){
-		$items['timetable/'.$row->serial]=array(
-			'title' => $row->serial,
-			'page callback' => 'timetable',
-			'page arguments' => array($row->cid),
-			'access callback' => 'user_access',
-			'access arguments' => array('manage course'),	
-			'type' => MENU_NORMAL_ITEM,
-		);
+	  $items['timetable/'.$row->serial]=array(
+	      'title' => $row->serial,
+	      'page callback' => 'timetable',
+	      'page arguments' => array($row->cid),
+	      'access callback' => 'user_access',
+	      'access arguments' => array('manage course'),	
+	      'type' => MENU_NORMAL_ITEM,
+	  );
 	}
 	return $items;
 }
@@ -199,15 +202,15 @@ function appointment_course_page(){
 }
 
 function list_classroom(){
-	$sql = 'SELECT * FROM as_classroom';
-	$result = db_query($sql);
-	$rows = array();
-	global $base_path;
-	foreach($result as $row){
-		$rows[] = '<a href="'.$base_path.'timetable/'.$row->serial.'">'.$row->serial.'</a>';
-	}
+  $sql = 'SELECT * FROM as_classroom';
+  $result = db_query($sql);
+  $rows = array();
+  global $base_path;
+  foreach($result as $row){
+    $rows[] = '<a href="'.$base_path.'timetable/'.$row->serial.'">'.$row->serial.'</a>';
+  }
 	
-	return theme('item_list',array('items'=>$rows));
+  return theme('item_list',array('items'=>$rows));
 }
 
 function timetable($cid){
