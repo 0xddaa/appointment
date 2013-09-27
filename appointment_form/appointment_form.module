@@ -58,7 +58,7 @@ function appointment_form_form($form, &$form_state){
 		'#options'=>get_teacher_list(),
 		'#default_value' => $appointment->teacher,
 	);
-	$sql = 'SELECT * FROM as_classroom';
+	$sql = 'SELECT * FROM as_classroom ORDER BY `serial` ASC';
 	$result = db_query($sql);
 	$classrooms = array();
 	foreach($result as $row){
@@ -112,11 +112,11 @@ function appointment_form_form_submit($form_id, &$form_state){
   $aid = intval($form_state['build_info']['args'][0]);
   if(check_data_logic($form_state) && check_data_legal($form_state)){
     if($aid){
-      if(check_data_conflict($form_state,'edit'))
+      if(check_data_conflict($form_state,$aid))
 	save_appointment($form_state,$aid);
     }
     else{	
-      if(check_data_conflict($form_state,'save'))
+      if(check_data_conflict($form_state))
 	save_appointment($form_state);
     }
   }
@@ -160,13 +160,13 @@ function save_appointment($form_state,$aid=null){
 	drupal_goto('my_list');
 }
 
-function check_data_conflict($form_state,$state){
+function check_data_conflict($form_state,$aid=null){
 	$appointment_date = 
 		$form_state['values']['date']['year'].'-'.
 		$form_state['values']['date']['month'].'-'.
 		$form_state['values']['date']['day'];
 	$date_condition = "date='$appointment_date'";
-	$weekday_condition = "weekday=".date('w',mktime(0,0,0,$form_state['month'],$form_state['day'],$form_state['year']));
+	$weekday_condition = "weekday=".date('w',strtotime($appointment_date));
 	$serial_condition = "cid=".$form_state['values']['classroom'];
 	$period_condition = '';
 
@@ -177,25 +177,28 @@ function check_data_conflict($form_state,$state){
 	}
 	$period_condition = '('.$period_condition.')';	
 
-	$appointment_sql = 'SELECT aid,priority FROM `as_appointment` WHERE '.$date_condition.' AND '.$serial_condition.' AND '.$period_condition;
-	$course_sql = 'UNION ALL SELECT id,priority FROM as_timetable WHERE '.$weekday_condition.' AND '.$serial_condition.' AND '.$period_condition;
+	$appointment_sql = 'SELECT aid,priority,account FROM `as_appointment` WHERE '.$date_condition.' AND '.$serial_condition.' AND '.$period_condition;
+	$course_sql = 'UNION ALL SELECT id,priority,weekday FROM as_timetable WHERE '.$weekday_condition.' AND '.$serial_condition.' AND '.$period_condition;
 	$sql = $appointment_sql.' '.$course_sql;
 	mysql_real_escape_string($sql);
 	$result = db_query($sql)->fetchAssoc();
 
-	if($result==null)
+	if($result==null){
 		return true;
-
+	}
 	/* find someone has reserved the period or has course
-		0=course 1=csieoffice
-    other number not defined */
+		0=course 1=csieoffice 2=general user
+    	   other number not defined */
 	else if ($result['priority'] == 0){
 		drupal_set_message('您填寫的時段有課程正在進行','error');
 		return false;
 	} 
 	else if ($result['priority'] > 0){
-		//if edit appointment  , ignore conflict
-		if($state=='edit') return true;
+		global $user;
+		//if editting,ignore time conflict
+		if($result['account'] == $user->name && $result['aid']==$aid){
+		  return true;
+		}
 		drupal_set_message('您填寫的時段已經被預約了','error');
 		return false;
 	}
